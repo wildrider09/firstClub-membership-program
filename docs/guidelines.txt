@@ -1,7 +1,0 @@
-
-
-Guidelines:
-Tech Stack: The solution must be implemented using Java and Spring Boot.
-AI Assistance: You are welcome to use AI tools for assistance, but please ensure you fully understand the underlying logic, as you may be asked to explain it in later rounds.
-Clarity: Please review the assignment requirements thoroughly before you begin coding.
-Submission: Upload your code to a GitHub repository and share the link with us HERE
