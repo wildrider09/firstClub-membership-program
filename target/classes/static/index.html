@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FirstClub Membership — Demo Console</title>
+<style>
+  :root{
+    --bg:#0f1221; --panel:#171a2e; --panel2:#1f2440; --ink:#e8ebff; --muted:#9aa3c7;
+    --silver:#9fb0c3; --gold:#e6b450; --platinum:#7fd5e6; --accent:#6c8cff; --ok:#37d39b; --err:#ff6b81;
+    --line:#2a2f52;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       background:linear-gradient(160deg,#0c0f1d,#141833);color:var(--ink);line-height:1.5}
+  header{padding:28px 32px;border-bottom:1px solid var(--line);background:rgba(20,24,51,.6)}
+  header h1{margin:0;font-size:22px;letter-spacing:.3px}
+  header p{margin:6px 0 0;color:var(--muted);font-size:14px}
+  .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid var(--line);
+         color:var(--muted);margin-left:8px;vertical-align:middle}
+  .wrap{display:grid;grid-template-columns:1.25fr .95fr;gap:18px;padding:22px 32px;max-width:1300px;margin:0 auto}
+  @media(max-width:980px){.wrap{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 18px 20px;margin-bottom:18px}
+  .card h2{margin:0 0 4px;font-size:15px}
+  .card .hint{color:var(--muted);font-size:12.5px;margin:0 0 14px}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+  label{font-size:12px;color:var(--muted);min-width:64px}
+  input,select{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;
+        padding:8px 10px;font-size:13px;outline:none;min-width:90px}
+  input:focus,select:focus{border-color:var(--accent)}
+  button{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:8px 13px;font-size:13px;
+         cursor:pointer;font-weight:600;transition:transform .05s,filter .15s}
+  button:hover{filter:brightness(1.08)} button:active{transform:translateY(1px)}
+  button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);font-weight:500}
+  .steps{counter-reset:s;margin:0;padding:0;list-style:none}
+  .steps li{counter-increment:s;position:relative;padding:7px 0 7px 30px;font-size:13.5px;border-bottom:1px dashed var(--line)}
+  .steps li:last-child{border-bottom:0}
+  .steps li::before{content:counter(s);position:absolute;left:0;top:7px;width:20px;height:20px;border-radius:50%;
+         background:var(--accent);color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center}
+  code{background:#0c0f1d;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12px;color:#cdd6ff}
+  pre{background:#0a0d18;border:1px solid var(--line);border-radius:10px;padding:14px;margin:0;overflow:auto;
+      max-height:520px;font-size:12.5px}
+  .log-line{white-space:pre-wrap;word-break:break-word;border-bottom:1px solid #141833;padding:6px 0}
+  .m{color:var(--muted)} .ok{color:var(--ok)} .err{color:var(--err)}
+  .pill{font-size:11px;padding:1px 7px;border-radius:20px;font-weight:700}
+  .SILVER{background:rgba(159,176,195,.18);color:var(--silver)}
+  .GOLD{background:rgba(230,180,80,.18);color:var(--gold)}
+  .PLATINUM{background:rgba(127,213,230,.18);color:var(--platinum)}
+  .tiers{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+  .tier{flex:1;min-width:150px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px}
+  .tier h3{margin:0 0 6px;font-size:13px;display:flex;justify-content:space-between}
+  .tier ul{margin:6px 0 0;padding-left:16px;font-size:11.5px;color:var(--muted)}
+  .statline{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;margin-top:4px}
+  .statline b{color:var(--ink)} .grp{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:14px 0 6px}
+  a{color:var(--accent)}
+  .topbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .clearbtn{float:right}
+</style>
+</head>
+<body>
+<header>
+  <h1>🛍️ FirstClub Membership Program <span class="badge">Java 21 · Spring Boot 3.4</span> <span class="badge">live demo console</span></h1>
+  <p>Subscription memberships with configurable, tiered benefits — subscribe, upgrade/downgrade, cancel, and earn tiers from your order activity. This page calls the real REST APIs on this server.</p>
+</header>
+
+<div class="wrap">
+  <!-- LEFT: live console -->
+  <div>
+    <div class="card">
+      <h2>1 · Catalogue <span class="m">— plans &amp; configurable tiers</span></h2>
+      <p class="hint">Plans set the billing cycle &amp; price. Tiers grant benefits and are unlocked by configurable rules.</p>
+      <div class="topbtns">
+        <button onclick="loadPlans()">GET /api/plans</button>
+        <button onclick="loadTiers()">GET /api/tiers</button>
+      </div>
+      <div id="tiersView" class="tiers"></div>
+    </div>
+
+    <div class="card">
+      <h2>2 · User &amp; orders</h2>
+      <p class="hint">Create a user, then place orders. Orders drive tier eligibility (order count &amp; monthly spend).</p>
+      <div class="row">
+        <label>Name</label><input id="uName" value="Demo User"/>
+        <label>Email</label><input id="uEmail" placeholder="auto if blank" style="min-width:180px"/>
+        <label>Cohort</label><input id="uCohort" placeholder="(optional)"/>
+        <button onclick="createUser()">Create user</button>
+      </div>
+      <div class="row">
+        <label>User&nbsp;ID</label><input id="orderUser" type="number" style="max-width:90px"/>
+        <label>Amount</label><input id="orderAmt" type="number" value="1500" style="max-width:110px"/>
+        <button onclick="placeOrder()">POST /api/orders</button>
+        <button class="ghost" onclick="placeManyOrders()">Place ×6 (unlock GOLD)</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>3 · Subscription lifecycle</h2>
+      <p class="hint">Subscribe to a plan; upgrade/downgrade tiers (eligibility enforced); cancel; track current membership.</p>
+      <div class="row">
+        <label>User&nbsp;ID</label><input id="subUser" type="number" style="max-width:90px"/>
+        <label>Plan</label>
+        <select id="subPlan"></select>
+        <label>Tier</label>
+        <select id="subTier"><option value="">auto (highest eligible)</option></select>
+        <button onclick="subscribe()">Subscribe</button>
+      </div>
+      <div class="row">
+        <label>Sub&nbsp;ID</label><input id="subId" type="number" style="max-width:90px"/>
+        <label>Tier</label><select id="changeTier"></select>
+        <button onclick="changeTier('upgrade')">Upgrade</button>
+        <button onclick="changeTier('downgrade')">Downgrade</button>
+        <button class="ghost" onclick="cancelSub()">Cancel</button>
+      </div>
+      <div class="row">
+        <label>User&nbsp;ID</label><input id="trackUser" type="number" style="max-width:90px"/>
+        <button onclick="current()">Current membership</button>
+        <button onclick="eligible()">Eligible tier</button>
+      </div>
+      <div id="statusView"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: guide + log -->
+  <div>
+    <div class="card">
+      <h2>▶ How to run</h2>
+      <ol class="steps">
+        <li>Ensure JDK 21+: <code>export JAVA_HOME=$(/usr/libexec/java_home -v 21)</code></li>
+        <li>From the project root: <code>./mvnw spring-boot:run</code></li>
+        <li>Open <a href="/">http://localhost:8080/</a> (this page)</li>
+        <li>Run tests anytime: <code>./mvnw test</code></li>
+      </ol>
+    </div>
+    <div class="card">
+      <h2>🎬 Guided demo</h2>
+      <p class="hint">One click runs the full happy path end-to-end against the live APIs.</p>
+      <button onclick="runScenario()">Run full scenario</button>
+      <p class="hint" style="margin-top:10px">Steps: create user → subscribe (lands on SILVER) → try GOLD (blocked) → place 6 orders → upgrade to GOLD → downgrade to SILVER → cancel.</p>
+      <p class="hint">Docs: <a href="https://localhost:8080" onclick="return false">see <code>docs/ARCHITECTURE.html</code> &amp; <code>docs/ENTITY_DESIGN.html</code></a> in the repo for diagrams.</p>
+    </div>
+    <div class="card">
+      <h2>📡 Activity log <button class="ghost clearbtn" onclick="clearLog()">clear</button></h2>
+      <pre id="log"></pre>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const log = $('log');
+function line(msg, cls){ const d=document.createElement('div'); d.className='log-line '+(cls||''); d.textContent=msg; log.prepend(d); }
+function clearLog(){ log.innerHTML=''; }
+
+async function api(method, path, body){
+  const opt={method, headers:{'Content-Type':'application/json'}};
+  if(body) opt.body=JSON.stringify(body);
+  line(`→ ${method} ${path}` + (body? '  '+JSON.stringify(body):''), 'm');
+  const res = await fetch(path, opt);
+  let data; const txt = await res.text();
+  try{ data = txt? JSON.parse(txt): null; }catch(e){ data = txt; }
+  const cls = res.ok? 'ok':'err';
+  line(`← ${res.status} ${res.statusText}\n` + (data!==null? JSON.stringify(data,null,2):'(no content)'), cls);
+  return {ok:res.ok, status:res.status, data};
+}
+
+function tierPill(name){ return `<span class="pill ${name}">${name}</span>`; }
+
+async function loadPlans(){
+  const {data} = await api('GET','/api/plans');
+  if(Array.isArray(data)){
+    const sel=$('subPlan'); sel.innerHTML='';
+    data.forEach(p=>{ const o=document.createElement('option'); o.value=p.id;
+      o.textContent=`${p.billingCycle} — ₹${p.price} (id ${p.id})`; sel.appendChild(o); });
+  }
+}
+async function loadTiers(){
+  const {data} = await api('GET','/api/tiers');
+  if(!Array.isArray(data)) return;
+  $('tiersView').innerHTML = data.map(t=>`
+    <div class="tier">
+      <h3>${tierPill(t.name)} <span class="m">rank ${t.rank}</span></h3>
+      <div class="m" style="font-size:11px">${t.description||''}</div>
+      <ul>${t.benefits.map(b=>`<li>${b.type}${b.value!=null?' = '+b.value:''}</li>`).join('')}</ul>
+      ${t.eligibilityRules.length? `<div class="m" style="font-size:10.5px;margin-top:6px">unlock: ${t.eligibilityRules.map(r=>r.type+(r.numericThreshold!=null?'≥'+r.numericThreshold:'')+(r.stringValue?'='+r.stringValue:'')).join(' AND ')}</div>`:'<div class="m" style="font-size:10.5px;margin-top:6px">unlock: open to all</div>'}
+    </div>`).join('');
+  // fill tier selects
+  ['subTier','changeTier'].forEach(selId=>{
+    const sel=$(selId); const keepAuto = selId==='subTier';
+    sel.innerHTML = keepAuto? '<option value="">auto (highest eligible)</option>':'';
+    data.forEach(t=>{ const o=document.createElement('option'); o.value=t.id; o.textContent=`${t.name} (id ${t.id})`; sel.appendChild(o); });
+  });
+}
+async function createUser(){
+  const email = $('uEmail').value || `demo${Date.now()}@example.com`;
+  const {ok,data} = await api('POST','/api/users',{name:$('uName').value,email,cohort:$('uCohort').value||null});
+  if(ok && data?.id){ ['orderUser','subUser','trackUser'].forEach(i=>$(i).value=data.id);
+    line(`✓ user #${data.id} created — fields prefilled`,'ok'); }
+}
+async function placeOrder(){
+  await api('POST','/api/orders',{userId:Number($('orderUser').value),amount:Number($('orderAmt').value)});
+}
+async function placeManyOrders(){
+  const u=Number($('orderUser').value), amt=Number($('orderAmt').value||1500);
+  for(let i=0;i<6;i++){ await api('POST','/api/orders',{userId:u,amount:amt}); }
+  line('✓ placed 6 orders','ok');
+}
+async function subscribe(){
+  const body={userId:Number($('subUser').value),planId:Number($('subPlan').value)};
+  const t=$('subTier').value; if(t) body.tierId=Number(t);
+  const {ok,data}=await api('POST','/api/subscriptions',body);
+  if(ok && data?.id){ $('subId').value=data.id; renderStatus(data); }
+}
+async function changeTier(kind){
+  const {ok,data}=await api('POST',`/api/subscriptions/${Number($('subId').value)}/${kind}`,{targetTierId:Number($('changeTier').value)});
+  if(ok) renderStatus(data);
+}
+async function cancelSub(){
+  const {ok,data}=await api('POST',`/api/subscriptions/${Number($('subId').value)}/cancel`);
+  if(ok) renderStatus(data);
+}
+async function current(){
+  const r=await api('GET',`/api/subscriptions/users/${Number($('trackUser').value)}/current`);
+  if(r.status===204){ $('statusView').innerHTML='<p class="m">No active subscription.</p>'; }
+  else if(r.ok) renderStatus(r.data);
+}
+async function eligible(){
+  const {ok,data}=await api('GET',`/api/subscriptions/users/${Number($('trackUser').value)}/eligible-tier`);
+  if(ok) $('statusView').innerHTML = `<div class="statline">Highest eligible tier: ${tierPill(data.highestEligibleTier.name)}</div>`;
+}
+function renderStatus(s){
+  $('statusView').innerHTML = `<div class="statline">
+     <span>Sub <b>#${s.id}</b></span>
+     <span>Tier ${tierPill(s.tier.name)}</span>
+     <span>Plan <b>${s.plan.billingCycle}</b></span>
+     <span>Status <b class="${s.currentlyActive?'ok':'err'}">${s.status}</b></span>
+     <span>Expires <b>${(s.endDate||'').slice(0,10)}</b></span>
+   </div>`;
+}
+async function runScenario(){
+  clearLog(); line('=== GUIDED SCENARIO START ===','ok');
+  await loadPlans(); await loadTiers();
+  const email=`scenario${Date.now()}@example.com`;
+  const u=await api('POST','/api/users',{name:'Scenario User',email});
+  if(!u.ok) return; const uid=u.data.id;
+  ['orderUser','subUser','trackUser'].forEach(i=>$(i).value=uid);
+  const planId=Number($('subPlan').value)||1;
+  const sub=await api('POST','/api/subscriptions',{userId:uid,planId});
+  if(!sub.ok) return; const sid=sub.data.id; $('subId').value=sid; renderStatus(sub.data);
+  // find GOLD id
+  const tiers=(await api('GET','/api/tiers')).data;
+  const gold=tiers.find(t=>t.name==='GOLD'), silver=tiers.find(t=>t.name==='SILVER');
+  line('— attempting GOLD upgrade before eligibility (expect 409) —','m');
+  await api('POST',`/api/subscriptions/${sid}/upgrade`,{targetTierId:gold.id});
+  line('— placing 6 orders to satisfy GOLD rule (>=5 orders) —','m');
+  for(let i=0;i<6;i++){ await api('POST','/api/orders',{userId:uid,amount:1200}); }
+  await api('GET',`/api/subscriptions/users/${uid}/eligible-tier`);
+  const up=await api('POST',`/api/subscriptions/${sid}/upgrade`,{targetTierId:gold.id});
+  if(up.ok) renderStatus(up.data);
+  const down=await api('POST',`/api/subscriptions/${sid}/downgrade`,{targetTierId:silver.id});
+  if(down.ok) renderStatus(down.data);
+  const can=await api('POST',`/api/subscriptions/${sid}/cancel`);
+  if(can.ok) renderStatus(can.data);
+  line('=== SCENARIO COMPLETE ===','ok');
+}
+// initial load
+loadPlans(); loadTiers();
+</script>
+</body>
+</html>

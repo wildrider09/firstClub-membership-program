@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FirstClub Membership — Entity Design</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+       background:#0f1221;color:#e8ebff;line-height:1.6}
+  header{padding:26px 32px;border-bottom:1px solid #2a2f52;background:#171a2e}
+  header h1{margin:0;font-size:21px} header p{margin:6px 0 0;color:#9aa3c7;font-size:14px}
+  main{max-width:1080px;margin:0 auto;padding:24px 32px}
+  nav a{color:#6c8cff;margin-right:16px;font-size:13px;text-decoration:none}
+  section{background:#171a2e;border:1px solid #2a2f52;border-radius:14px;padding:20px 22px;margin:18px 0}
+  h2{font-size:16px;margin:0 0 6px} .hint{color:#9aa3c7;font-size:13.5px;margin:0 0 16px}
+  .mermaid{background:#0a0d18;border:1px solid #2a2f52;border-radius:10px;padding:16px;overflow:auto}
+  code{background:#0c0f1d;border:1px solid #2a2f52;border-radius:5px;padding:1px 6px;font-size:12.5px;color:#cdd6ff}
+  table{border-collapse:collapse;width:100%;font-size:13px;margin-top:6px}
+  th,td{border:1px solid #2a2f52;padding:7px 9px;text-align:left;vertical-align:top} th{color:#9aa3c7;font-weight:600}
+  b{color:#fff}
+</style>
+</head>
+<body>
+<header>
+  <h1>🗃️ Entity Design — FirstClub Membership Program</h1>
+  <p>Normalised, data-driven model. Tiers, benefits and promotion rules are rows, not code — fully configurable.</p>
+</header>
+<main>
+  <nav>
+    <a href="index.html">↗ Demo console</a>
+    <a href="ARCHITECTURE.html">↗ Architecture &amp; flow</a>
+    <a href="#er">ER diagram</a>
+    <a href="#entities">Entity reference</a>
+    <a href="#why">Design rationale</a>
+  </nav>
+
+  <section id="er">
+    <h2>1 · Entity-relationship diagram</h2>
+    <p class="hint">A subscription binds a <b>user</b> to a <b>plan</b> and a <b>tier</b>. A tier owns many configurable
+       <b>benefits</b> and <b>eligibility rules</b>. <b>Orders</b> feed tier evaluation.</p>
+    <div class="mermaid">
+erDiagram
+  USER ||--o{ SUBSCRIPTION : has
+  USER ||--o{ ORDER : places
+  MEMBERSHIP_PLAN ||--o{ SUBSCRIPTION : "billed by"
+  MEMBERSHIP_TIER ||--o{ SUBSCRIPTION : "granted"
+  MEMBERSHIP_TIER ||--o{ TIER_BENEFIT : grants
+  MEMBERSHIP_TIER ||--o{ TIER_ELIGIBILITY_RULE : "gated by"
+
+  USER {
+    Long id PK
+    String name
+    String email UK
+    String cohort "nullable (e.g. VIP)"
+  }
+  MEMBERSHIP_PLAN {
+    Long id PK
+    String name
+    BillingCycle billingCycle "MONTHLY|QUARTERLY|YEARLY, UK"
+    BigDecimal price
+    boolean active
+  }
+  MEMBERSHIP_TIER {
+    Long id PK
+    String name UK "SILVER|GOLD|PLATINUM"
+    int tier_rank UK "higher = better"
+    String description
+    boolean baseTier "default on subscribe"
+  }
+  TIER_BENEFIT {
+    Long id PK
+    Long tier_id FK
+    BenefitType type "FREE_DELIVERY, EXTRA_DISCOUNT_PERCENT, ..."
+    BigDecimal benefit_value "nullable (e.g. discount %)"
+  }
+  TIER_ELIGIBILITY_RULE {
+    Long id PK
+    Long tier_id FK
+    EligibilityRuleType type "MIN_ORDER_COUNT, MIN_MONTHLY_ORDER_VALUE, REQUIRED_COHORT"
+    Double numericThreshold "nullable"
+    String stringValue "nullable (e.g. cohort)"
+  }
+  SUBSCRIPTION {
+    Long id PK
+    Long user_id FK
+    Long plan_id FK
+    Long tier_id FK
+    SubscriptionStatus status "ACTIVE|CANCELLED|EXPIRED"
+    Instant startDate
+    Instant endDate
+    Instant cancelledAt "nullable"
+    String idempotencyKey UK "nullable"
+    Long version "optimistic lock"
+  }
+  ORDER {
+    Long id PK
+    Long user_id FK
+    BigDecimal amount
+    Instant placedAt
+  }
+    </div>
+  </section>
+
+  <section id="entities">
+    <h2>2 · Entity reference</h2>
+    <table>
+      <tr><th>Entity</th><th>Responsibility</th><th>Key design points</th></tr>
+      <tr><td><b>User</b></td><td>Platform member</td><td><code>cohort</code> drives cohort-based eligibility; email unique.</td></tr>
+      <tr><td><b>MembershipPlan</b></td><td>Billing cadence + price</td><td><code>BillingCycle</code> enum carries duration months → expiry math. One plan per cycle.</td></tr>
+      <tr><td><b>MembershipTier</b></td><td>A tier &amp; its perks/gates</td><td><code>rank</code> orders tiers for upgrade/downgrade; <code>baseTier</code> = default. Owns benefits + rules (cascade).</td></tr>
+      <tr><td><b>TierBenefit</b></td><td>One configurable perk</td><td>Stored as rows (not flags) → add/remove/retune perks at runtime.</td></tr>
+      <tr><td><b>TierEligibilityRule</b></td><td>One promotion criterion</td><td>Maps to a Strategy by <code>type</code>; ALL rules of a tier must pass.</td></tr>
+      <tr><td><b>Subscription</b></td><td>User↔Plan↔Tier for a window</td><td><code>@Version</code> optimistic lock; unique <code>idempotencyKey</code>; lazy expiry.</td></tr>
+      <tr><td><b>Order</b></td><td>A purchase</td><td>Raw signal for order-count &amp; monthly-spend rules.</td></tr>
+    </table>
+  </section>
+
+  <section id="why">
+    <h2>3 · Design rationale (abstractions, extensibility, modularity)</h2>
+    <table>
+      <tr><th>Decision</th><th>Why</th></tr>
+      <tr><td>Benefits &amp; rules as <b>child rows</b>, not boolean columns</td><td>New perks/criteria need no schema or code change — the program is configured as data and editable via APIs.</td></tr>
+      <tr><td>Plan and Tier are <b>separate</b> entities</td><td>Orthogonal concerns: billing cadence vs. benefit level. A user keeps their plan while moving tiers.</td></tr>
+      <tr><td><b>Enums</b> for cycle / benefit / rule / status</td><td>Type-safety + each enum constant pairs with a strategy or duration, keeping behaviour close to data.</td></tr>
+      <tr><td><code>tier_rank</code> as an integer</td><td>Single source of truth for ordering → trivial, correct upgrade/downgrade comparisons.</td></tr>
+      <tr><td><b>Version</b> + idempotency on Subscription</td><td>Concurrency-safe lifecycle without pessimistic DB locks (see Architecture §5).</td></tr>
+      <tr><td>Reserved words mapped (<code>tier_rank</code>, <code>benefit_value</code>)</td><td>Portable across H2 / other SQL engines.</td></tr>
+    </table>
+  </section>
+</main>
+<script>mermaid.initialize({startOnLoad:true, theme:'dark', themeVariables:{fontSize:'13px'}});</script>
+</body>
+</html>
