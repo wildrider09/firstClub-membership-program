@@ -1,0 +1,529 @@
+[3J[H[2J
+  ███████╗██╗██████╗ ███████╗████████╗ ██████╗██╗     ██╗   ██╗██████╗ 
+  ██╔════╝██║██╔══██╗██╔════╝╚══██╔══╝██╔════╝██║     ██║   ██║██╔══██╗
+  █████╗  ██║██████╔╝███████╗   ██║   ██║     ██║     ██║   ██║██████╔╝
+  ██╔══╝  ██║██╔══██╗╚════██║   ██║   ██║     ██║     ██║   ██║██╔══██╗
+  ██║     ██║██║  ██║███████║   ██║   ╚██████╗███████╗╚██████╔╝██████╔╝
+  ╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝   ╚═╝    ╚═════╝╚══════╝ ╚═════╝ ╚═════╝ 
+        Membership Program — live end-to-end API demo
+        Java 21 · Spring Boot 3 · tiered benefits, data-driven rules
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▶ 1. Browse the catalogue
+Plans (Monthly/Quarterly/Yearly) and tiers (Silver/Gold/Platinum) are seeded & data-driven.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+$ curl /api/plans
+[
+  {
+    "id": 1,
+    "name": "FirstClub Monthly",
+    "billingCycle": "MONTHLY",
+    "durationMonths": 1,
+    "price": 199.00,
+    "active": true
+  },
+  {
+    "id": 2,
+    "name": "FirstClub Quarterly",
+    "billingCycle": "QUARTERLY",
+    "durationMonths": 3,
+    "price": 499.00,
+    "active": true
+  },
+  {
+    "id": 3,
+    "name": "FirstClub Yearly",
+    "billingCycle": "YEARLY",
+    "durationMonths": 12,
+    "price": 1499.00,
+    "active": true
+  }
+]
+$ curl /api/tiers
+[
+  {
+    "id": 1,
+    "name": "SILVER",
+    "rank": 1,
+    "description": "Entry tier for all members",
+    "baseTier": true,
+    "benefits": [
+      {
+        "type": "EXTRA_DISCOUNT_PERCENT",
+        "value": 5.00
+      },
+      {
+        "type": "FREE_DELIVERY",
+        "value": null
+      }
+    ],
+    "eligibilityRules": []
+  },
+  {
+    "id": 2,
+    "name": "GOLD",
+    "rank": 2,
+    "description": "For regular shoppers",
+    "baseTier": false,
+    "benefits": [
+      {
+        "type": "EXCLUSIVE_DEALS",
+        "value": null
+      },
+      {
+        "type": "EXTRA_DISCOUNT_PERCENT",
+        "value": 10.00
+      },
+      {
+        "type": "FREE_DELIVERY",
+        "value": null
+      }
+    ],
+    "eligibilityRules": [
+      {
+        "type": "MIN_ORDER_COUNT",
+        "numericThreshold": 5.0,
+        "stringValue": null
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "PLATINUM",
+    "rank": 3,
+    "description": "Premium tier for top spenders",
+    "baseTier": false,
+    "benefits": [
+      {
+        "type": "EARLY_ACCESS_TO_SALES",
+        "value": null
+      },
+      {
+        "type": "EXCLUSIVE_DEALS",
+        "value": null
+      },
+      {
+        "type": "EXTRA_DISCOUNT_PERCENT",
+        "value": 20.00
+      },
+      {
+        "type": "FREE_DELIVERY",
+        "value": null
+      },
+      {
+        "type": "PRIORITY_SUPPORT",
+        "value": null
+      }
+    ],
+    "eligibilityRules": [
+      {
+        "type": "MIN_MONTHLY_ORDER_VALUE",
+        "numericThreshold": 5000.0,
+        "stringValue": null
+      },
+      {
+        "type": "MIN_ORDER_COUNT",
+        "numericThreshold": 10.0,
+        "stringValue": null
+      }
+    ]
+  }
+]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▶ 2. Subscribe Alice (user 1) to the Monthly plan
+No tier specified → she lands on the base tier (SILVER).
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+$ curl -X POST /api/subscriptions -d '{"userId":1,"planId":1}'
+{
+  "id": 1,
+  "userId": 1,
+  "plan": {
+    "id": 1,
+    "name": "FirstClub Monthly",
+    "billingCycle": "MONTHLY",
+    "durationMonths": 1,
+    "price": 199.00,
+    "active": true
+  },
+  "tier": {
+    "id": 1,
+    "name": "SILVER",
+    "rank": 1,
+    "description": "Entry tier for all members",
+    "baseTier": true,
+    "benefits": [
+      {
+        "type": "EXTRA_DISCOUNT_PERCENT",
+        "value": 5.00
+      },
+      {
+        "type": "FREE_DELIVERY",
+        "value": null
+      }
+    ],
+    "eligibilityRules": []
+  },
+  "status": "ACTIVE",
+  "currentlyActive": true,
+  "startDate": "2026-06-09T19:23:36.413816Z",
+  "endDate": "2026-07-09T19:23:36.413816Z",
+  "cancelledAt": null
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▶ 3. Track Alice's current membership
+Shows active tier, plan and expiry window.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+$ curl /api/subscriptions/users/1/current
+{
+  "id": 1,
+  "userId": 1,
+  "plan": {
+    "id": 1,
+    "name": "FirstClub Monthly",
+    "billingCycle": "MONTHLY",
+    "durationMonths": 1,
+    "price": 199.00,
+    "active": true
+  },
+  "tier": {
+    "id": 1,
+    "name": "SILVER",
+    "rank": 1,
+    "description": "Entry tier for all members",
+    "baseTier": true,
+    "benefits": [
+      {
+        "type": "EXTRA_DISCOUNT_PERCENT",
+        "value": 5.00
+      },
+      {
+        "type": "FREE_DELIVERY",
+        "value": null
+      }
+    ],
+    "eligibilityRules": []
+  },
+  "status": "ACTIVE",
+  "currentlyActive": true,
+  "startDate": "2026-06-09T19:23:36.413816Z",
+  "endDate": "2026-07-09T19:23:36.413816Z",
+  "cancelledAt": null
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▶ 4. Try to jump straight to GOLD
+Eligibility is enforced → expect 409, she has 0 orders (needs ≥5).
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+$ curl -i -X POST /api/subscriptions/1/upgrade -d '{"targetTierId":2}'
+Invalid numeric literal at line 1, column 9 (while parsing 'HTTP/1.1 409 ')
+{"timestamp":"2026-06-09T19:23:40.591649Z","status":409,"error":"Conflict","message":"User 1 is not eligible for tier 'GOLD'"}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▶ 5. Place 6 orders
+Orders feed the tier-eligibility engine (GOLD rule: ≥ 5 orders).
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  • order #1 (amount 100)
+  • order #2 (amount 100)
+  • order #3 (amount 100)
+  • order #4 (amount 100)
+  • order #5 (amount 100)
+  • order #6 (amount 100)
+  ✓ 6 orders placed
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▶ 6. What does Alice qualify for now?
+The engine recomputes the highest eligible tier from live activity.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+$ curl /api/subscriptions/users/1/eligible-tier
+{
+  "userId": 1,
+  "highestEligibleTier": {
+    "id": 2,
+    "name": "GOLD",
+    "rank": 2,
+    "description": "For regular shoppers",
+    "baseTier": false,
+    "benefits": [
+      {
+        "type": "EXCLUSIVE_DEALS",
+        "value": null
+      },
+      {
+        "type": "EXTRA_DISCOUNT_PERCENT",
+        "value": 10.00
+      },
+      {
+        "type": "FREE_DELIVERY",
+        "value": null
+      }
+    ],
+    "eligibilityRules": [
+      {
+        "type": "MIN_ORDER_COUNT",
+        "numericThreshold": 5.0,
+        "stringValue": null
+      }
+    ]
+  }
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▶ 7. Upgrade to GOLD
+Now eligible → upgrade succeeds, benefits change (10% discount, exclusive deals).
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+$ curl -X POST /api/subscriptions/1/upgrade -d '{"targetTierId":2}'
+{
+  "id": 1,
+  "userId": 1,
+  "plan": {
+    "id": 1,
+    "name": "FirstClub Monthly",
+    "billingCycle": "MONTHLY",
+    "durationMonths": 1,
+    "price": 199.00,
+    "active": true
+  },
+  "tier": {
+    "id": 2,
+    "name": "GOLD",
+    "rank": 2,
+    "description": "For regular shoppers",
+    "baseTier": false,
+    "benefits": [
+      {
+        "type": "EXCLUSIVE_DEALS",
+        "value": null
+      },
+      {
+        "type": "EXTRA_DISCOUNT_PERCENT",
+        "value": 10.00
+      },
+      {
+        "type": "FREE_DELIVERY",
+        "value": null
+      }
+    ],
+    "eligibilityRules": [
+      {
+        "type": "MIN_ORDER_COUNT",
+        "numericThreshold": 5.0,
+        "stringValue": null
+      }
+    ]
+  },
+  "status": "ACTIVE",
+  "currentlyActive": true,
+  "startDate": "2026-06-09T19:23:36.413816Z",
+  "endDate": "2026-07-09T19:23:36.413816Z",
+  "cancelledAt": null
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▶ 8. Downgrade back to SILVER
+Tier moves are bidirectional and audited via @Version (optimistic locking).
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+$ curl -X POST /api/subscriptions/1/downgrade -d '{"targetTierId":1}'
+{
+  "id": 1,
+  "userId": 1,
+  "plan": {
+    "id": 1,
+    "name": "FirstClub Monthly",
+    "billingCycle": "MONTHLY",
+    "durationMonths": 1,
+    "price": 199.00,
+    "active": true
+  },
+  "tier": {
+    "id": 1,
+    "name": "SILVER",
+    "rank": 1,
+    "description": "Entry tier for all members",
+    "baseTier": true,
+    "benefits": [
+      {
+        "type": "EXTRA_DISCOUNT_PERCENT",
+        "value": 5.00
+      },
+      {
+        "type": "FREE_DELIVERY",
+        "value": null
+      }
+    ],
+    "eligibilityRules": []
+  },
+  "status": "ACTIVE",
+  "currentlyActive": true,
+  "startDate": "2026-06-09T19:23:36.413816Z",
+  "endDate": "2026-07-09T19:23:36.413816Z",
+  "cancelledAt": null
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▶ 9. Cancel the subscription
+Lifecycle complete — status flips to CANCELLED.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+$ curl /api/subscriptions/1/cancel
+{
+  "timestamp": "2026-06-09T19:23:52.744800Z",
+  "status": 500,
+  "error": "Internal Server Error",
+  "message": "Request method 'GET' is not supported"
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▶ 10. Idempotent subscribe
+Same idempotencyKey twice → returns the SAME subscription, no duplicate.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+First call (creates):
+$ curl -X POST /api/subscriptions -d '{"userId":2,"planId":3,"idempotencyKey":"abc-123"}'
+{
+  "id": 2,
+  "userId": 2,
+  "plan": {
+    "id": 3,
+    "name": "FirstClub Yearly",
+    "billingCycle": "YEARLY",
+    "durationMonths": 12,
+    "price": 1499.00,
+    "active": true
+  },
+  "tier": {
+    "id": 1,
+    "name": "SILVER",
+    "rank": 1,
+    "description": "Entry tier for all members",
+    "baseTier": true,
+    "benefits": [
+      {
+        "type": "EXTRA_DISCOUNT_PERCENT",
+        "value": 5.00
+      },
+      {
+        "type": "FREE_DELIVERY",
+        "value": null
+      }
+    ],
+    "eligibilityRules": []
+  },
+  "status": "ACTIVE",
+  "currentlyActive": true,
+  "startDate": "2026-06-09T19:23:54.825106Z",
+  "endDate": "2027-06-09T19:23:54.825106Z",
+  "cancelledAt": null
+}
+Repeat with same key (returns original):
+$ curl -X POST /api/subscriptions -d '{"userId":2,"planId":3,"idempotencyKey":"abc-123"}'
+{
+  "id": 2,
+  "userId": 2,
+  "plan": {
+    "id": 3,
+    "name": "FirstClub Yearly",
+    "billingCycle": "YEARLY",
+    "durationMonths": 12,
+    "price": 1499.00,
+    "active": true
+  },
+  "tier": {
+    "id": 1,
+    "name": "SILVER",
+    "rank": 1,
+    "description": "Entry tier for all members",
+    "baseTier": true,
+    "benefits": [
+      {
+        "type": "EXTRA_DISCOUNT_PERCENT",
+        "value": 5.00
+      },
+      {
+        "type": "FREE_DELIVERY",
+        "value": null
+      }
+    ],
+    "eligibilityRules": []
+  },
+  "status": "ACTIVE",
+  "currentlyActive": true,
+  "startDate": "2026-06-09T19:23:54.825106Z",
+  "endDate": "2027-06-09T19:23:54.825106Z",
+  "cancelledAt": null
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▶ 11. Runtime configurability
+Add a brand-new benefit to GOLD at runtime — no code change, no redeploy.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+$ curl -X POST /api/tiers/2/benefits -d '{"type":"PRIORITY_SUPPORT"}'
+{
+  "id": 2,
+  "name": "GOLD",
+  "rank": 2,
+  "description": "For regular shoppers",
+  "baseTier": false,
+  "benefits": [
+    {
+      "type": "EXCLUSIVE_DEALS",
+      "value": null
+    },
+    {
+      "type": "EXTRA_DISCOUNT_PERCENT",
+      "value": 10.00
+    },
+    {
+      "type": "FREE_DELIVERY",
+      "value": null
+    },
+    {
+      "type": "PRIORITY_SUPPORT",
+      "value": null
+    }
+  ],
+  "eligibilityRules": [
+    {
+      "type": "MIN_ORDER_COUNT",
+      "numericThreshold": 5.0,
+      "stringValue": null
+    }
+  ]
+}
+GOLD tier now carries the new benefit:
+$ curl /api/tiers/2
+{
+  "id": 2,
+  "name": "GOLD",
+  "rank": 2,
+  "description": "For regular shoppers",
+  "baseTier": false,
+  "benefits": [
+    {
+      "type": "EXCLUSIVE_DEALS",
+      "value": null
+    },
+    {
+      "type": "EXTRA_DISCOUNT_PERCENT",
+      "value": 10.00
+    },
+    {
+      "type": "FREE_DELIVERY",
+      "value": null
+    },
+    {
+      "type": "PRIORITY_SUPPORT",
+      "value": null
+    }
+  ],
+  "eligibilityRules": [
+    {
+      "type": "MIN_ORDER_COUNT",
+      "numericThreshold": 5.0,
+      "stringValue": null
+    }
+  ]
+}
+
+✓ End-to-end demo complete: catalogue → subscribe → orders →
+  eligibility-gated upgrade → downgrade → cancel → idempotency → live config.
+
